@@ -10,5 +10,9 @@ These are some things I found helpful when working with EdgeDB.
       Tangentially related, this includes a function to create a Pydantic model from a Python dictionary.
     - tasks.py
       This is an Invoke make alternative with one endpoint, to show the workflow I've used for EdgeDB in the past. This runs the edgedb-py cli for code generation, copies it, runs edge_model_gen, copies the generated code to where I used it, then runs isort and black on the outputted code.
+    - test.py
+      Invoke endpoints for running tests using EdgeDB.
     - tests/functional/conftest.py and tests/functional/test_edgedb_fixture.py
       Pytest fixture and examples showing how I have tested EdgeDB queries in the past.
+    - depends.py
+      A FastAPI dependency that sets up an EdgeDB transaction and passes it to the request.
