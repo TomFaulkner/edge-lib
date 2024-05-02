@@ -1,0 +1,81 @@
+from collections.abc import Sequence
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import StrEnum
+from typing import Any, Literal, Optional
+from uuid import UUID
+
+import orjson
+from edgedb import AsyncIOExecutor
+from pydantic import BaseModel, Field, TypeAdapter
+
+EDGEQL_QUERY = r"""
+{{query}}
+"""
+{% if input_model %}
+class {{ input_model_name }}(BaseModel):
+    {% for name, type, default in input_model -%}
+    {% if default is none -%}
+    {{ name }}: {{ type }} | None{% else -%}
+    {{ name }}: {{ type }}{% if default != '...' %} = {{ default }}{% endif %}{% endif %}
+    {% endfor -%}
+{% endif %}
+
+{% for literal in literals %}
+{{literal.alias}} = Literal[
+    {% for value in literal.values %}
+    "{{value}}",
+    {% endfor %}
+]
+{% endfor %}
+
+{% for enum in enums %}
+class {{enum.name}}(StrEnum):
+    {%- for member in enum.members %}
+    {{member.name}} = "{{member.value}}"
+    {%- endfor %}
+{% endfor %}
+
+{% for ntuple in namedtuples | reverse %}
+class {{ntuple.name}}(NamedTuple):
+    {% for field in ntuple.fields -%}
+    {{field.name}}: {{field.type_str}}
+    {% endfor %}
+{% endfor %}
+
+{% for model in models | reverse %}
+class {{model.name}}(BaseModel):
+    {% for field in model.fields -%}
+    {{field.name}}:
+    {%- if field.optional -%}
+    {{field.type_str}} | None
+    {%- else -%}
+    {{field.type_str}}
+    {%- endif %}
+    {%- if field.alias -%}
+    = Field(alias="{{field.alias}}")
+    {%- endif %}
+    {% endfor %}
+{% endfor %}
+
+{%- if return_type != 'None' %}
+{{stem}}_adapter = TypeAdapter({{return_type}})
+{% endif %}
+
+async def {{stem}} (
+    executor: AsyncIOExecutor,
+    *,
+    input: {{ input_model_name }},
+) -> {{return_type}}:
+    resp = await executor.query_
+    {%- if return_single -%}
+    single_
+    {%- endif -%}
+    json(EDGEQL_QUERY,
+        **input.model_dump(exclude_unset=True),
+    )
+    {%- if return_type == 'None' %}
+    assert resp == "null"
+    {% else %}
+    return {{stem}}_adapter.validate_json(resp, strict=False)
+    {% endif %}
