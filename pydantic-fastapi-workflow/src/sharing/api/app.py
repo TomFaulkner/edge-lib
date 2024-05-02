@@ -10,8 +10,8 @@ protagonist_router = APIRouter(prefix="/protagonist")
 
 
 @protagonist_router.put("/update")
-async def insert_protag(data: InsertProtagInitInput) -> InsertProtagInitResult:
-    async with get_client() as client:
+async def insert_protag(data: InsertProtagInitInput, client=Depends(get_client)) -> InsertProtagInitResult:
+    # don't need this: async with get_client() as client:
         try:
             result = await insert_protag_init(client, input=data)
             return result
