@@ -1,0 +1,25 @@
+[project]
+name = "sharing"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Darin", email = "86675935+darinkishore@users.noreply.github.com"},
+]
+dependencies = [
+    "pydantic>=2.7.0",
+    "edgedb @ git+https://github.com/edgedb/edgedb-python",
+    "ujson>=5.9.0",
+    "uv>=0.1.39",
+    "fastapi",
+    "strawberry-graphql",
+    "invoke>=2.2.0",
+    "ruff",
+    "black"
+]
+requires-python = "==3.11.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
